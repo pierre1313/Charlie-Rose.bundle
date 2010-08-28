@@ -16,7 +16,7 @@ CACHE_INTERVAL = 3600*8
 
 ####################################################################################################
 def Start():
-  Plugin.AddPrefixHandler(CR_PREFIX, MainMenu, 'Charlie Rose', 'icon-default.jpg', 'art-default.jpg')
+  Plugin.AddPrefixHandler(CR_PREFIX, MainMenu, 'Charlie Rose', 'icon-default.png', 'art-default.jpg')
   Plugin.AddViewGroup("Details", viewMode="InfoList", mediaType="items")
   MediaContainer.title1 = 'Charlie Rose'
   MediaContainer.content = 'Items'
