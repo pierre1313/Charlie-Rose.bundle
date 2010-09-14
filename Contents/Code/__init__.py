@@ -147,8 +147,18 @@ def Search(sender, query, page=1):
 
 ####################################################################################################
 def PlayVideo(sender, url):
-  link = XML.ElementFromURL(CR_ROOT+url, True).xpath('//input[@name="distribute-embed"]')[0].get('value')
-  docID = re.findall('docId=(.*)&', link)[0].split('%3A')
-  xml = XML.ElementFromURL("http://video.google.com/videofeed?fgvns=1&fai=1&docid=%s&begin=%s&len=%s&hl=undefined" % (docID[0], docID[1], docID[2]), False)
-  url = xml.xpath('//m:content[@type="video/x-flv"]', namespaces=CR_NAMESPACE)[0].get('url')
+  page = HTTP.Request(CR_ROOT+url)
+  url_pattern = re.compile('"([^"]+.flv)"')
+  url = url_pattern.search(page)
+  if url != None:
+    url = url.group(1)
+    return url 
+  else:
+    link_pattern = re.compile('<link rel=\"video_src\" href=\"http://www.charlierose.com/swf/CRGoogleVideo.swf\?docId=([^"]+)"')
+    link = link_pattern.search(page)
+    if link != None:
+      link = link.group(1)
+    docID = link.split('%3A')
+    xml = XML.ElementFromURL("http://video.google.com/videofeed?fgvns=1&fai=1&docid=%s&begin=%s&len=%s&hl=undefined" % (docID[0], docID[1], docID[2]), False)
+    url = xml.xpath('//m:content[@type="video/x-flv"]', namespaces=CR_NAMESPACE)[0].get('url')   
   return Redirect(url)
