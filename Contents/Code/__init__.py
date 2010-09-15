@@ -14,13 +14,21 @@ CR_NAMESPACE    = {'m':'http://search.yahoo.com/mrss/'}
 
 CACHE_INTERVAL = 3600*8
 
+ART = 'art-default.jpg'
+ICON = 'icon-default.png'
+NAME = 'Charlie Rose'
+
 ####################################################################################################
 def Start():
-  Plugin.AddPrefixHandler(CR_PREFIX, MainMenu, 'Charlie Rose', 'icon-default.png', 'art-default.jpg')
+  Plugin.AddPrefixHandler(CR_PREFIX, MainMenu, NAME, ICON, ART)
   Plugin.AddViewGroup("Details", viewMode="InfoList", mediaType="items")
+  Plugin.AddViewGroup("List", viewMode="List", mediaType="items")
   MediaContainer.title1 = 'Charlie Rose'
   MediaContainer.content = 'Items'
-  MediaContainer.art = R('art-default.jpg')
+  MediaContainer.art = R(ART)
+  MediaContainer.viewGroup = "List"
+  DirectoryItem.thumb = R(ICON)
+  
   HTTP.SetCacheTime(CACHE_INTERVAL)
 
 ####################################################################################################
