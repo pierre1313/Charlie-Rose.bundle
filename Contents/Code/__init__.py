@@ -1,7 +1,4 @@
 import re, string
-from PMS import *
-from PMS.Objects import *
-from PMS.Shortcuts import *
 
 CR_PREFIX       = '/video/charlierose'
 CR_ROOT         = 'http://www.charlierose.com'
@@ -23,22 +20,24 @@ def Start():
   Plugin.AddPrefixHandler(CR_PREFIX, MainMenu, NAME, ICON, ART)
   Plugin.AddViewGroup("Details", viewMode="InfoList", mediaType="items")
   Plugin.AddViewGroup("List", viewMode="List", mediaType="items")
+  Plugin.AddViewGroup("PanelStream", viewMode="PanelStream", mediaType="items")
+  
   MediaContainer.title1 = 'Charlie Rose'
   MediaContainer.content = 'Items'
   MediaContainer.art = R(ART)
   MediaContainer.viewGroup = "List"
   DirectoryItem.thumb = R(ICON)
   
-  HTTP.SetCacheTime(CACHE_INTERVAL)
+  HTTP.CacheTime = CACHE_INTERVAL
 
 ####################################################################################################
 def UpdateCache():
-  HTTP.Request(CR_ROOT)
-  HTTP.Request(CR_TOPICS)
-  HTTP.Request(CR_GUESTS+'/popular?pagenum=1')
-  HTTP.Request(CR_GUESTS+'/recent?pagenum=1')
-  HTTP.Request(CR_RECENT_CLIPS+'?pagenum=1')
-  GetCollectionsMenu(ItemInfoRecord())
+   HTTP.Request(CR_ROOT)
+   HTTP.Request(CR_TOPICS)
+   HTTP.Request(CR_GUESTS+'/popular?pagenum=1')
+   HTTP.Request(CR_GUESTS+'/recent?pagenum=1')
+   HTTP.Request(CR_RECENT_CLIPS+'?pagenum=1')
+   GetCollectionsMenu(ItemInfoRecord())
   
 ####################################################################################################
 def MainMenu():
@@ -67,8 +66,8 @@ def GetGuestListAlphabet(sender):
 
 ####################################################################################################
 def GetGuestList(sender, url, page=1):
-  dir = MediaContainer(viewGroup='Details', title2=sender.itemTitle, replaceParent=(page>1))
-  xml = XML.ElementFromURL(CR_GUESTS+"/"+url+"pagenum="+str(page), True)
+  dir = MediaContainer(viewGroup='PanelStream', title2=sender.itemTitle, replaceParent=(page>1))
+  xml = HTML.ElementFromURL(CR_GUESTS+"/"+url+"pagenum="+str(page))
   for guest in xml.xpath('//li[@class="guests"]'):
     key = guest.find('a').get('href')
     title = guest.xpath('div/h5/a')[0].text
@@ -83,7 +82,7 @@ def GetGuestList(sender, url, page=1):
   if page < numPages:
     dir.Append(Function(DirectoryItem(GetGuestList, "More..."), url=url, page=page+1))
     
-  dir.title2 += " (%d of %d)" % (page, numPages)
+  dir.title2 = dir.title2 + " (%d of %d)" % (page, numPages)
   return dir
 
 ####################################################################################################
@@ -93,7 +92,7 @@ def GetGuestAppearances(sender, url):
 ####################################################################################################
 def GetTopicsMenu(sender):
   dir = MediaContainer(title2=sender.itemTitle)
-  for topic in XML.ElementFromURL(CR_TOPICS, True).xpath('//table[@class="view-list"]/tbody/tr'):
+  for topic in HTML.ElementFromURL(CR_TOPICS).xpath('//table[@class="view-list"]/tbody/tr'):
     rows = topic.xpath('td')
     title = rows[0].find('a').text
     subtitle = rows[1].text
@@ -103,7 +102,7 @@ def GetTopicsMenu(sender):
 ####################################################################################################
 def GetTopicMenu(sender, url, page=1, extraClass='', useSummary=False):
   dir = MediaContainer(viewGroup='Details', title2=sender.itemTitle, replaceParent=(page>1))
-  xml = XML.ElementFromURL(url+'?pagenum=%d' % page, True)
+  xml = HTML.ElementFromURL(url+'?pagenum=%d' % page)
   for item in xml.xpath('//ol[@class="medallion%s"]/li' % extraClass):
     try: img = CR_ROOT + item.xpath('a/img')[0].get('src').replace('140x90', '460x345')
     except: img = None
@@ -143,7 +142,7 @@ def GetCollectionsMenu(sender):
     title = topic.find('title').text
     desc = topic.find('description').text
     link = topic.find('link').text.strip()
-    xml = XML.ElementFromURL(link, True)
+    xml = HTML.ElementFromURL(link)
     thumb = CR_ROOT+xml.xpath("id('content-rail')/img")[0].get('src')
     dir.Append(Function(DirectoryItem(GetTopicMenu, title=title, thumb=thumb, summary=desc), url=link))
     
@@ -155,7 +154,7 @@ def Search(sender, query, page=1):
 
 ####################################################################################################
 def PlayVideo(sender, url):
-  page = HTTP.Request(CR_ROOT+url)
+  page = HTTP.Request(CR_ROOT+url).content
   url_pattern = re.compile('"([^"]+.flv)"')
   url = url_pattern.search(page)
   if url != None:
@@ -167,6 +166,6 @@ def PlayVideo(sender, url):
     if link != None:
       link = link.group(1)
     docID = link.split('%3A')
-    xml = XML.ElementFromURL("http://video.google.com/videofeed?fgvns=1&fai=1&docid=%s&begin=%s&len=%s&hl=undefined" % (docID[0], docID[1], docID[2]), False)
+    xml = XML.ElementFromURL("http://video.google.com/videofeed?fgvns=1&fai=1&docid=%s&begin=%s&len=%s&hl=undefined" % (docID[0], docID[1], docID[2]))
     url = xml.xpath('//m:content[@type="video/x-flv"]', namespaces=CR_NAMESPACE)[0].get('url')   
   return Redirect(url)
