@@ -155,10 +155,8 @@ def Search(sender, query, page=1):
 ####################################################################################################
 def PlayVideo(sender, url):
   page = HTTP.Request(CR_ROOT+url).content
-  Log(page)
   url_pattern = re.compile('"url":"([^&]+.flv)')
   url = url_pattern.search(page)
-  Log(url)
   if url != None:
     url = url.group(1)
     return Redirect(url) 
