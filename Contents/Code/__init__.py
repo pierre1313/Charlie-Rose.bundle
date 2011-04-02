@@ -60,7 +60,7 @@ def GetGuestsMenu(sender):
 ####################################################################################################
 def GetGuestListAlphabet(sender):
   dir = MediaContainer(title2=sender.itemTitle)
-  for ch in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+  for ch in ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']:
       dir.Append(Function(DirectoryItem(GetGuestList, title=ch), url='all?letter='+ch+'&'))
   return dir
 
@@ -155,11 +155,13 @@ def Search(sender, query, page=1):
 ####################################################################################################
 def PlayVideo(sender, url):
   page = HTTP.Request(CR_ROOT+url).content
-  url_pattern = re.compile('"([^"]+.flv)"')
+  Log(page)
+  url_pattern = re.compile('"url":"([^&]+.flv)')
   url = url_pattern.search(page)
+  Log(url)
   if url != None:
     url = url.group(1)
-    return url 
+    return Redirect(url) 
   else:
     link_pattern = re.compile('<link rel=\"video_src\" href=\"http://www.charlierose.com/swf/CRGoogleVideo.swf\?docId=([^"]+)"')
     link = link_pattern.search(page)
